@@ -124,6 +124,9 @@ mod build {
             cc.define("POSIX", "");
         };
 
+        cc.define("BUCKETS_128", "1");
+        cc.define("CHECKSUM_1B", "1");
+
         let mut enable_crypto = false;
         match get_crypto_lib() {
             CryptoLib::OpenSSL => {
