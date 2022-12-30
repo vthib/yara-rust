@@ -158,11 +158,25 @@ mod build {
                 enable_crypto = true;
                 cc.define("HAVE_WINCRYPT_H", "1");
                 println!("cargo:rustc-link-lib=dylib=crypt32");
+                // authenticode parser part of the PE module only works with OpenSSL.
+                exclude.push(
+                    basedir
+                        .join("modules")
+                        .join("pe")
+                        .join("authenticode-parser"),
+                );
             }
             CryptoLib::CommonCrypto => {
                 enable_crypto = true;
                 cc.define("HAVE_COMMONCRYPTO_COMMONCRYPTO_H", "1");
                 println!("cargo:rustc-link-lib=dylib=System");
+                // authenticode parser part of the PE module only works with OpenSSL.
+                exclude.push(
+                    basedir
+                        .join("modules")
+                        .join("pe")
+                        .join("authenticode-parser"),
+                );
             }
             CryptoLib::None => {}
         }
