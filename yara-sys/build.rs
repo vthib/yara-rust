@@ -234,32 +234,42 @@ mod build {
             }
         }
 
-        if cfg!(feature = "module-hash") && enable_crypto {
+        let modules_env = get_target_env_var("YARA_MODULES");
+        let modules: Vec<&str> = modules_env
+            .as_ref()
+            .map_or(Vec::new(), |v| v.split(',').collect());
+
+        if (cfg!(feature = "module-hash") || modules.contains(&"hash")) && enable_crypto {
             cc.define("HASH_MODULE", "1");
         } else {
             exclude.push(basedir.join("modules").join("hash").join("hash.c"));
         }
+
         if cfg!(feature = "profiling") {
             cc.define("YR_PROFILING_ENABLED", "1");
         }
-        if cfg!(feature = "module-magic") {
+
+        if cfg!(feature = "module-magic") || modules.contains(&"magic") {
             cc.define("MAGIC_MODULE", "1");
             println!("cargo:rustc-link-lib=dylib=magic");
         } else {
             exclude.push(basedir.join("modules").join("magic").join("magic.c"));
         }
-        if cfg!(feature = "module-cuckoo") {
+
+        if cfg!(feature = "module-cuckoo") || modules.contains(&"cuckoo") {
             cc.define("CUCKOO_MODULE", "1");
             println!("cargo:rustc-link-lib=dylib=jansson");
         } else {
             exclude.push(basedir.join("modules").join("cuckoo").join("cuckoo.c"));
         }
-        if cfg!(feature = "module-dotnet") {
+
+        if cfg!(feature = "module-dotnet") || modules.contains(&"dotnet") {
             cc.define("DOTNET_MODULE", "1");
         } else {
             exclude.push(basedir.join("modules").join("dotnet").join("dotnet.c"));
         }
-        if cfg!(feature = "module-dex") {
+
+        if cfg!(feature = "module-dex") || modules.contains(&"dex") {
             cc.define("DEX_MODULE", "1");
             if cfg!(feature = "module-debug-dex") {
                 cc.define("DEBUG_DEX_MODULE", "1");
@@ -267,11 +277,13 @@ mod build {
         } else {
             exclude.push(basedir.join("modules").join("dex").join("dex.c"));
         }
-        if cfg!(feature = "module-macho") {
+
+        if cfg!(feature = "module-macho") || modules.contains(&"macho") {
             cc.define("MACHO_MODULE", "1");
         } else {
             exclude.push(basedir.join("modules").join("macho").join("macho.c"));
         }
+
         if cfg!(feature = "ndebug") {
             cc.define("NDEBUG", "1");
         }
@@ -316,6 +328,7 @@ mod build {
         cargo_rerun_if_env_changed("YARA_OPENSSL_INCLUDE_DIR");
         cargo_rerun_if_env_changed("YARA_LIBRARY_PATH");
         cargo_rerun_if_env_changed("YARA_CRYPTO_LIB");
+        cargo_rerun_if_env_changed("YARA_MODULES");
 
         println!("cargo:rustc-link-search=native={lib_dir}");
         println!("cargo:rustc-link-lib=static=yara");
